@@ -17,13 +17,13 @@ async function render() {
       },
     },
     {
-      waitUntil() {},
-      passThroughOnException() {},
+      waitUntil() { },
+      passThroughOnException() { },
     },
   );
 }
 
-test("server-renders the Mindlix.ai landing page", async () => {
+test("server-renders the mindlix.in landing page", async () => {
   const stylesheet = await readFile(
     new URL("../app/globals.css", import.meta.url),
     "utf8",

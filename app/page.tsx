@@ -128,7 +128,7 @@ function HighlightText({ children }: { children: string }) {
 export default function Home() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [accent, setAccent] = useState<Accent>("ocean");
-  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [appearanceOpen, setAppearanceOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [focus, setFocus] = useState<Focus>("Decisions");
   const [query, setQuery] = useState(
@@ -270,11 +270,11 @@ export default function Home() {
 
       <header className="site-header">
         <div className="page-shell header-inner">
-          <a className="brand" href="#top" aria-label="Mindlix.ai home">
+          <a className="brand" href="#top" aria-label="mindlix.in home">
             <span className="brand-mark" aria-hidden="true">
               M
             </span>
-            <span className="brand-name">mindlix.ai</span>
+            <span className="brand-name">mindlix.in</span>
           </a>
 
           <nav className="desktop-nav" aria-label="Primary navigation">
@@ -289,50 +289,72 @@ export default function Home() {
               Ask Mindlix
             </a>
 
-            <div className="palette-control">
+            <div className="appearance-control">
               <button
-                className="palette-toggle"
+                className="appearance-toggle"
                 type="button"
-                aria-label="Choose page accent color"
-                aria-expanded={paletteOpen}
-                aria-controls="accent-palette"
-                onClick={() => setPaletteOpen(!paletteOpen)}
+                aria-label="Open appearance settings"
+                aria-expanded={appearanceOpen}
+                aria-controls="appearance-popover"
+                onClick={() => setAppearanceOpen(!appearanceOpen)}
               >
-                <span className="palette-swatch" aria-hidden="true" />
+                <span className="appearance-icon" aria-hidden="true">
+                  {theme === "dark" ? "☼" : "☾"}
+                </span>
+                <span className="appearance-label">Appearance</span>
               </button>
               <div
-                className={`palette-popover${paletteOpen ? " is-open" : ""}`}
-                id="accent-palette"
-                aria-label="Accent color"
+                className={`appearance-popover${appearanceOpen ? " is-open" : ""}`}
+                id="appearance-popover"
+                aria-label="Appearance settings"
               >
-                <span>Reading color</span>
-                <div>
-                  {accentOptions.map((option) => (
+                <div className="appearance-section">
+                  <span>Theme</span>
+                  <div className="appearance-mode-row">
                     <button
-                      key={option.id}
                       type="button"
-                      className={accent === option.id ? "is-selected" : ""}
-                      aria-label={option.label}
-                      aria-pressed={accent === option.id}
-                      style={{ "--swatch": option.color } as React.CSSProperties}
+                      className={theme === "dark" ? "is-selected" : ""}
                       onClick={() => {
-                        setAccent(option.id);
-                        setPaletteOpen(false);
+                        setTheme("dark");
+                        setAppearanceOpen(false);
                       }}
-                    />
-                  ))}
+                    >
+                      Dark
+                    </button>
+                    <button
+                      type="button"
+                      className={theme === "light" ? "is-selected" : ""}
+                      onClick={() => {
+                        setTheme("light");
+                        setAppearanceOpen(false);
+                      }}
+                    >
+                      Light
+                    </button>
+                  </div>
+                </div>
+
+                <div className="appearance-section">
+                  <span>Accent</span>
+                  <div className="appearance-swatch-row">
+                    {accentOptions.map((option) => (
+                      <button
+                        key={option.id}
+                        type="button"
+                        className={accent === option.id ? "is-selected" : ""}
+                        aria-label={option.label}
+                        aria-pressed={accent === option.id}
+                        style={{ "--swatch": option.color } as React.CSSProperties}
+                        onClick={() => {
+                          setAccent(option.id);
+                          setAppearanceOpen(false);
+                        }}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
-
-            <button
-              className="theme-toggle"
-              type="button"
-              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            >
-              <span aria-hidden="true">{theme === "dark" ? "○" : "●"}</span>
-            </button>
 
             <button
               className="menu-toggle"
@@ -383,7 +405,7 @@ export default function Home() {
                   Decide what <em>moves.</em>
                 </h1>
                 <p className="hero-intro">
-                  Mindlix.ai brings business R&D, lead generation, decision
+                  mindlix.in brings business R&D, lead generation, decision
                   intelligence, analytics, and growth into one deliberate path.
                 </p>
               </div>
@@ -482,7 +504,7 @@ export default function Home() {
             <div className="direction-copy">
               <p className="editorial-statement">
                 <HighlightText>
-                  Business teams rarely lack information. They lack a shared way to turn scattered market signals, customer behaviour, competing priorities, and incomplete evidence into a decision they can explain and act on. Mindlix.ai connects research, demand, analytics, and growth around the question that matters now.
+                  Business teams rarely lack information. They lack a shared way to turn scattered market signals, customer behaviour, competing priorities, and incomplete evidence into a decision they can explain and act on. mindlix.in connects research, demand, analytics, and growth around the question that matters now.
                 </HighlightText>
               </p>
               <p className="support-copy reveal">
@@ -609,7 +631,7 @@ export default function Home() {
               Bring your next business decision into <em>focus.</em>
             </h2>
             <p>
-              Use Mindlix.ai to frame the choice, connect the evidence it needs,
+              Use mindlix.in to frame the choice, connect the evidence it needs,
               and define a practical next move.
             </p>
             <a className="primary-action" href="#workbench">
@@ -653,11 +675,11 @@ export default function Home() {
               <p className="eyebrow">Operating model</p>
               <a href="#method">Four-step method</a>
               <a href="#principles">Product principles</a>
-              <a href="#direction">Why Mindlix.ai</a>
+              <a href="#direction">Why mindlix.in</a>
             </div>
             <div>
               <p className="eyebrow">Company</p>
-              <a href="#top">Mindlix.ai</a>
+              <a href="#top">mindlix.in</a>
               <a href="#principles">Responsible AI</a>
               <a href="#start">Start a question</a>
             </div>
@@ -665,11 +687,11 @@ export default function Home() {
 
           <div className="footer-panel">
             <div>
-              <span className="footer-parent">An Infyne product</span>
+              <span className="footer-parent">An infyne.in product</span>
               <p>Technology built for thoughtful, long-term business progress.</p>
             </div>
             <div>
-              <span className="footer-wordmark">mindlix.ai</span>
+              <span className="footer-wordmark">mindlix.in</span>
               <a href="#workbench">
                 Structure your next decision <span aria-hidden="true">→</span>
               </a>
@@ -677,7 +699,7 @@ export default function Home() {
           </div>
 
           <div className="legal-bar">
-            <p>© {new Date().getFullYear()} Mindlix.ai</p>
+            <p>© {new Date().getFullYear()} mindlix.in</p>
             <p>Research clearly. Decide deliberately. Grow responsibly.</p>
           </div>
         </div>

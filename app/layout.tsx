@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Italianno, Open_Sans } from "next/font/google";
+import { Cormorant_Garamond, Open_Sans } from "next/font/google";
 import { headers } from "next/headers";
 import "./globals.css";
 
@@ -9,23 +9,23 @@ const openSans = Open_Sans({
   display: "swap",
 });
 
-const italianno = Italianno({
+const cormorantGaramond = Cormorant_Garamond({
   variable: "--font-italianno",
   subsets: ["latin"],
-  weight: "400",
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
-const title = "Mindlix.ai — Research, decisions, and growth";
+const title = "mindlix.in — Research, decisions, and growth";
 const description =
-  "Mindlix.ai connects business R&D, lead generation, decision intelligence, analytics, and growth around the questions that matter.";
+  "mindlix.in connects business R&D, lead generation, decision intelligence, analytics, and growth around the questions that matter.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const requestHeaders = await headers();
   const host =
     requestHeaders.get("x-forwarded-host") ??
     requestHeaders.get("host") ??
-    "mindlix.ai";
+    "mindlix.in";
   const protocol =
     requestHeaders.get("x-forwarded-proto") ??
     (host.includes("localhost") ? "http" : "https");
@@ -40,14 +40,14 @@ export async function generateMetadata(): Promise<Metadata> {
       title,
       description,
       url: baseUrl,
-      siteName: "Mindlix.ai",
+      siteName: "mindlix.in",
       type: "website",
       images: [
         {
           url: shareImage,
           width: 1731,
           height: 909,
-          alt: "Mindlix.ai — Understand what matters. Decide what moves.",
+          alt: "mindlix.in — Understand what matters. Decide what moves.",
         },
       ],
     },
@@ -67,7 +67,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${openSans.variable} ${italianno.variable}`}>{children}</body>
+      <body className={`${openSans.variable} ${cormorantGaramond.variable}`}>{children}</body>
     </html>
   );
 }
