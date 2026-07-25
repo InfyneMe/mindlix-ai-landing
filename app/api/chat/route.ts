@@ -18,10 +18,15 @@ For legal, medical, or financial decisions, provide general information and reco
 Do not claim to have searched the web or accessed private business data.`;
 
 export async function POST(request: Request) {
-  const apiKey = process.env.OPENAI_API_KEY?.trim();
+  const apiKey = process.env.OPENROUTER_API_KEY?.trim();
   if (!apiKey) {
     return NextResponse.json(
-      { error: "Mindlix AI is not configured yet. Add OPENAI_API_KEY and try again." },
+      {
+        error:
+          "Mindlix AI is not configured yet. Add OPENROUTER_API_KEY and try again.",
+        errorCode: "configuration_missing",
+        retryable: false,
+      },
       { status: 503 },
     );
   }
@@ -59,55 +64,75 @@ export async function POST(request: Request) {
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
-    const response = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${apiKey}`,
-        "content-type": "application/json",
+    const response = await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${apiKey}`,
+          "content-type": "application/json",
+          "x-openrouter-title": "Mindlix AI",
+        },
+        body: JSON.stringify({
+          model: process.env.OPENROUTER_MODEL?.trim() || "openai/gpt-4o",
+          messages: [
+            { role: "system", content: SYSTEM_INSTRUCTIONS },
+            ...messages,
+          ],
+          max_tokens: 900,
+        }),
+        signal: controller.signal,
       },
-      body: JSON.stringify({
-        model: process.env.OPENAI_MODEL?.trim() || "gpt-5.6-luna",
-        instructions: SYSTEM_INSTRUCTIONS,
-        input: messages.map((message) => ({
-          role: message.role,
-          content: message.content,
-        })),
-        store: false,
-        max_output_tokens: 900,
-        reasoning: { effort: "none" },
-        text: { verbosity: "medium" },
-      }),
-      signal: controller.signal,
-    });
+    );
 
     const payload = (await response.json()) as {
-      error?: { message?: string };
-      output?: Array<{
-        type?: string;
-        content?: Array<{ type?: string; text?: string }>;
+      error?: {
+        code?: number | string;
+        message?: string;
+        metadata?: { error_type?: string };
+      };
+      choices?: Array<{
+        message?: {
+          content?: string | Array<{ type?: string; text?: string }>;
+        };
       }>;
     };
 
-    if (!response.ok) {
-      console.error("OpenAI request failed", response.status, payload.error?.message);
+    if (!response.ok || payload.error) {
+      const providerError = classifyOpenRouterError(
+        response.status,
+        payload.error,
+      );
+      console.error(
+        "OpenRouter request failed",
+        response.status,
+        payload.error?.metadata?.error_type ??
+          payload.error?.code ??
+          "unknown",
+        response.headers.get("x-request-id") ?? "no-request-id",
+      );
       return NextResponse.json(
         {
-          error:
-            response.status === 429
-              ? "Mindlix AI is receiving many requests. Please try again shortly."
-              : "Mindlix AI could not complete that response. Please try again.",
+          error: providerError.message,
+          errorCode: providerError.code,
+          retryable: providerError.retryable,
         },
-        { status: response.status === 429 ? 429 : 502 },
+        {
+          status: providerError.status,
+          headers: { "cache-control": "no-store" },
+        },
       );
     }
 
-    const message = payload.output
-      ?.filter((item) => item.type === "message")
-      .flatMap((item) => item.content ?? [])
-      .filter((content) => content.type === "output_text")
-      .map((content) => content.text ?? "")
-      .join("\n")
-      .trim();
+    const content = payload.choices?.[0]?.message?.content;
+    const message =
+      typeof content === "string"
+        ? content.trim()
+        : content
+            ?.filter((part) => part.type === "text")
+            .map((part) => part.text ?? "")
+            .join("\n")
+            .trim();
 
     if (!message) {
       return NextResponse.json(
@@ -134,6 +159,69 @@ export async function POST(request: Request) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function classifyOpenRouterError(
+  status: number,
+  error?: {
+    code?: number | string;
+    message?: string;
+    metadata?: { error_type?: string };
+  },
+) {
+  const code = error?.metadata?.error_type ?? error?.code ?? "";
+  const message = error?.message?.toLowerCase() ?? "";
+  const quotaExceeded =
+    status === 402 ||
+    code === "payment_required" ||
+    message.includes("insufficient credits");
+
+  if (quotaExceeded) {
+    return {
+      code: "quota_exceeded",
+      message:
+        "Mindlix AI’s OpenRouter credits are unavailable. Add credits or use a funded API key, then try again.",
+      retryable: false,
+      status: 503,
+    };
+  }
+
+  if (status === 429) {
+    return {
+      code: "rate_limited",
+      message:
+        "Mindlix AI is receiving many requests. Please wait a moment and try again.",
+      retryable: true,
+      status: 429,
+    };
+  }
+
+  if (status === 401 || status === 403) {
+    return {
+      code: "authentication_failed",
+      message:
+        "Mindlix AI’s API key is invalid or not permitted. Check OPENROUTER_API_KEY and try again.",
+      retryable: false,
+      status: 503,
+    };
+  }
+
+  if (status === 404 || code === "model_not_found") {
+    return {
+      code: "model_unavailable",
+      message:
+        "The configured model is unavailable through OpenRouter. Check OPENROUTER_MODEL and try again.",
+      retryable: false,
+      status: 503,
+    };
+  }
+
+  return {
+    code: "provider_error",
+    message: "Mindlix AI could not complete that response. Please try again.",
+    retryable: status >= 500,
+    status: 502,
+  };
 }
 
 function parseMessages(body: unknown): ChatMessage[] | null {

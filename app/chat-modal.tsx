@@ -32,6 +32,7 @@ export default function ChatModal({
   const [draft, setDraft] = useState("");
   const [isThinking, setIsThinking] = useState(false);
   const [error, setError] = useState("");
+  const [canRetry, setCanRetry] = useState(true);
   const initialPromptSent = useRef(false);
   const modalRef = useRef<HTMLElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
@@ -51,6 +52,7 @@ export default function ChatModal({
       setMessages(nextMessages);
       setDraft("");
       setError("");
+      setCanRetry(true);
       setIsThinking(true);
 
       const controller = new AbortController();
@@ -66,9 +68,11 @@ export default function ChatModal({
         const payload = (await response.json()) as {
           message?: string;
           error?: string;
+          retryable?: boolean;
         };
 
         if (!response.ok || !payload.message) {
+          setCanRetry(payload.retryable !== false);
           throw new Error(
             payload.error ?? "Mindlix AI could not complete that response.",
           );
@@ -261,9 +265,11 @@ export default function ChatModal({
           {error && (
             <div className="chat-error" role="alert">
               <p>{error}</p>
-              <button type="button" onClick={retryLastMessage}>
-                Try again
-              </button>
+              {canRetry && (
+                <button type="button" onClick={retryLastMessage}>
+                  Try again
+                </button>
+              )}
             </div>
           )}
         </div>

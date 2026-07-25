@@ -45,9 +45,14 @@ test("server-renders the mindlix.in landing page", async () => {
   assert.match(html, /Growth analytics/);
   assert.match(stylesheet, /prefers-reduced-motion/);
   assert.match(stylesheet, /\.chat-modal/);
-  assert.match(chatRoute, /OPENAI_API_KEY/);
-  assert.match(chatRoute, /store:\s*false/);
-  assert.match(chatRoute, /gpt-5\.6-luna/);
+  assert.match(chatRoute, /OPENROUTER_API_KEY/);
+  assert.match(chatRoute, /openrouter\.ai\/api\/v1\/chat\/completions/);
+  assert.match(chatRoute, /openai\/gpt-4o/);
+  assert.match(chatRoute, /payment_required/);
+  assert.match(chatRoute, /quota_exceeded/);
+  assert.match(chatRoute, /rate_limited/);
+  assert.match(chatRoute, /authentication_failed/);
+  assert.doesNotMatch(chatRoute, /api\.openai\.com|OPENAI_API_KEY/);
   assert.doesNotMatch(chatRoute, /localStorage|sessionStorage|drizzle/i);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/i);
 });
