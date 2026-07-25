@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
+import ChatModal from "./chat-modal";
 
 type Focus = "Research" | "Demand" | "Decisions" | "Growth";
 type Accent = "ocean" | "sage" | "violet" | "orange";
@@ -13,32 +14,6 @@ const accentOptions: Array<{ id: Accent; label: string; color: string }> = [
   { id: "violet", label: "Soft violet", color: "#9b8ec7" },
   { id: "orange", label: "Burnt orange", color: "#e76f2e" },
 ];
-
-const focusOutputs: Record<
-  Focus,
-  { question: string; evidence: string; move: string }
-> = {
-  Research: {
-    question: "Which uncertainty must be reduced before resources are committed?",
-    evidence: "Market structure, customer friction, substitutes, and operating constraints.",
-    move: "Turn the largest unknown into one focused research sprint.",
-  },
-  Demand: {
-    question: "Which buyer has a real reason to act now?",
-    evidence: "Segment fit, intent signals, buying triggers, and reachable decision-makers.",
-    move: "Prioritize one segment and test one clear route to conversation.",
-  },
-  Decisions: {
-    question: "Which option creates the best learning-adjusted return?",
-    evidence: "Assumptions, trade-offs, reversibility, downside, and timing.",
-    move: "Compare the viable paths and define the condition that changes the choice.",
-  },
-  Growth: {
-    question: "What is creating movement, and what only looks busy?",
-    evidence: "Acquisition quality, conversion behavior, retention signals, and experiment history.",
-    move: "Connect one growth constraint to one measurable operating experiment.",
-  },
-};
 
 const capabilities = [
   {
@@ -134,8 +109,8 @@ export default function Home() {
   const [query, setQuery] = useState(
     "Should we enter a new market or deepen our current one?",
   );
-  const [brief, setBrief] = useState(focusOutputs.Decisions);
-  const [answerVisible, setAnswerVisible] = useState(false);
+  const [chatPrompt, setChatPrompt] = useState("");
+  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem("mindlix-theme");
@@ -254,9 +229,14 @@ export default function Home() {
   function submitQuery(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!query.trim()) return;
-    setBrief(focusOutputs[focus]);
-    setAnswerVisible(true);
+    setChatPrompt(query.trim());
+    setChatOpen(true);
   }
+
+  const closeChat = useCallback(() => {
+    setChatOpen(false);
+    setChatPrompt("");
+  }, []);
 
   function closeMenu() {
     setMenuOpen(false);
@@ -447,23 +427,6 @@ export default function Home() {
                   ))}
                 </div>
 
-                <div
-                  className={`search-answer${answerVisible ? " is-visible" : ""}`}
-                  aria-live="polite"
-                >
-                  <div>
-                    <span>Research question</span>
-                    <p>{brief.question}</p>
-                  </div>
-                  <div>
-                    <span>Evidence to connect</span>
-                    <p>{brief.evidence}</p>
-                  </div>
-                  <div>
-                    <span>Next move</span>
-                    <p>{brief.move}</p>
-                  </div>
-                </div>
               </form>
             </div>
 
@@ -704,6 +667,9 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      {chatOpen && (
+        <ChatModal initialPrompt={chatPrompt} onClose={closeChat} />
+      )}
     </>
   );
 }

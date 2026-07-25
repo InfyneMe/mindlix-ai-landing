@@ -28,17 +28,26 @@ test("server-renders the mindlix.in landing page", async () => {
     new URL("../app/globals.css", import.meta.url),
     "utf8",
   );
+  const chatRoute = await readFile(
+    new URL("../app/api/chat/route.ts", import.meta.url),
+    "utf8",
+  );
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>Mindlix\.ai/);
+  assert.match(html, /<title>mindlix\.in/);
   assert.match(html, /Research the signal/);
   assert.match(html, /Ask Mindlix/);
   assert.match(html, /Business R&amp;D/);
   assert.match(html, /Lead generation/);
   assert.match(html, /Growth analytics/);
   assert.match(stylesheet, /prefers-reduced-motion/);
+  assert.match(stylesheet, /\.chat-modal/);
+  assert.match(chatRoute, /OPENAI_API_KEY/);
+  assert.match(chatRoute, /store:\s*false/);
+  assert.match(chatRoute, /gpt-5\.6-luna/);
+  assert.doesNotMatch(chatRoute, /localStorage|sessionStorage|drizzle/i);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/i);
 });
