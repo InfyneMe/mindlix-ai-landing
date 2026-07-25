@@ -34,8 +34,8 @@ test("server-renders the Mindlix.ai landing page", async () => {
 
   const html = await response.text();
   assert.match(html, /<title>Mindlix\.ai/);
-  assert.match(html, /Understand what matters/);
-  assert.match(html, /Research to decision/);
+  assert.match(html, /Research the signal/);
+  assert.match(html, /Ask Mindlix/);
   assert.match(html, /Business R&amp;D/);
   assert.match(html, /Lead generation/);
   assert.match(html, /Growth analytics/);

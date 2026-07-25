@@ -3,6 +3,8 @@ import { drizzle } from "drizzle-orm/d1";
 import * as schema from "./schema";
 
 declare global {
+  // Cloudflare exposes worker bindings through this global interface.
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Cloudflare {
     interface Env {
       DB?: D1Database;
